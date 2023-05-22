@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+This code is a demo application of 
+"Semi-blind-trace algorithm for self-supervised attenuation of vertically coherent noise"
+
+For terminalogy and the definition of parameters refere to the paper.
+
 Created on Sun Apr 30 20:00:47 2023
 
 @author: mabedi
@@ -16,10 +21,11 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, BatchNormalization, Conv2D, Concatenate, Conv2DTranspose, ReLU
 
 #%% Loading data
-used_folder = os.getcwd()# You can modify the folder address
+used_folder = os.getcwd()# You can modify the folder address (Please unzip the provided data)
 filename='/Data_with_noise_syn.npy'
 
 X_train_with_noise = np.load(used_folder + filename)
+
 sh = tf.shape(X_train_with_noise).numpy()
 sc = sh[2]
 st = sh[1]
@@ -29,7 +35,6 @@ BUFFER_SIZE = ss // 2
 BATCH_SIZE = 30
 train_dataset = tf.data.Dataset.from_tensor_slices(X_train_with_noise)
 train_dataset = train_dataset.shuffle(BUFFER_SIZE, seed=0, reshuffle_each_iteration=True).batch(BATCH_SIZE)
-
 #%% Model
 initializer = tf.random_normal_initializer(0., 0.02, seed=1)
 X_input = Input(shape=[st, sc, 1])
@@ -197,7 +202,7 @@ def fit(dataset, epochs, num_of_masked_traces=15, epsilon=0.05, partly_noisy=Fal
 #%% Training the network
 
 os.system('rm -rfv '+str(used_folder)+'/Results'+'/*')#Empty the save folder before starting the training
-
+print(sh)
 history = fit(train_dataset, epochs=30, num_of_masked_traces=20, epsilon=0.1, partly_noisy=True)
 
 #%% Plotting the history
@@ -216,7 +221,7 @@ plt.legend(['Active trace', 'Non-active traces'])
 Model_trained = tf.keras.models.load_model(str(used_folder)+'/Results'+'/model_epoch_30', compile=False)
 X_predict = Model_trained.predict(X_train_with_noise)
 
-sample_number=100
+sample_number=20
 
 plt.figure()
 caxis = [-1, 1]
